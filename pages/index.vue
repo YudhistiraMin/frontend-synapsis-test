@@ -10,6 +10,7 @@
           <v-col  v-for="(p, run) in 5" :key="run" cols="12" class="py-0">
             <v-skeleton-loader
               type="image"
+              transition="scale-transition"
               class="mb-10 mt-10"
               :loading="process.run">
             </v-skeleton-loader>

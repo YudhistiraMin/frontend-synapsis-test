@@ -1,5 +1,18 @@
 <template>
   <div>
+    <!-- snackbar -->
+    <v-snackbar
+      v-model="snackbar"
+      color="green lighten-2"
+      tile
+      top
+      right
+      class="white--text"
+      :timeout="timeout">
+      {{ text }}
+    </v-snackbar>
+    <!-- end snackbar -->
+
     <!-- dialog tambah pengguna -->
     <v-dialog
       persistent
@@ -19,9 +32,10 @@
                 </div>
                 <v-text-field
                   dense
+                  :disabled="process.load"
                   color="black"
                   :error-messages="errors"
-                  v-model="form.title"
+                  v-model="form.name"
                   required>
                 </v-text-field>
                 </ValidationProvider>
@@ -34,6 +48,7 @@
                 </div>
                 <v-text-field
                   dense
+                  :disabled="process.load"
                   color="black"
                   :error-messages="errors"
                   v-model="form.email"
@@ -49,6 +64,7 @@
                   </div>
                   <v-select
                     dense
+                    :disabled="process.load"
                     :items="[
                       {
                         label: 'Laki-laki',
@@ -76,6 +92,7 @@
                   </div>
                   <v-select
                     dense
+                    :disabled="process.load"
                     :items="[
                       {
                         label: 'Aktif',
@@ -100,31 +117,70 @@
         </v-form>
         <v-card-actions class="justify-center">
           <v-btn
-            rounded
             small
             width="70"
             color="#F5F5F5"
             elevation="0"
             light
+            :disabled="process.load"
             class="text-capitalize"
-            @click="dialog.add = false;">
+            @click="reset(); $refs.observer.reset();">
             Tutup
           </v-btn>
          
           <v-btn
-            rounded
             small
+            :loading="process.load"
+            :disabled="process.load"
             width="120" 
             color="black"
             elevation="0"
             class="white--text text-capitalize"
-            @click="dialog.add = false">
+            @click="save();">
             Simpan
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
     <!-- end dialog tambah artikel -->
+
+    <!-- dialog hapus -->
+    <v-dialog v-model="dialog.delete" 
+      persistent
+      width="350">
+      <v-card class="pa-5">
+        <v-card-text>
+          Apakah anda yakin menghapus
+          <span class="font-weight-bold">
+           {{form.name}}
+          </span>
+          ?
+        </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn
+            small
+            outlined
+            class="text-capitalize mx-1"
+            :disabled="process.load"
+            @click="dialog.delete = false">
+            <v-icon color="black" small class="mr-1">mdi-close-circle</v-icon>
+            Tidak
+          </v-btn>
+          <v-btn
+            small
+            color="black"
+            elevation="3"
+            class="text-capitalize white--text mx-1"
+            :loading="process.load"
+            :disabled="process.load"
+            @click="deletes()">
+            <v-icon small class="mr-1">mdi-trash-can</v-icon>
+            Ya, hapus
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <!-- end dialog hapus -->
 
     <!-- list pengguna -->
     <section class="mt-5 mb-7 px-5">
@@ -160,52 +216,83 @@
           </v-col>
         </v-row>
         <v-row justify="center" v-show="process.run">
-          <v-col  v-for="(p, run) in 5" :key="run" cols="3" class="py-0">
+          <v-col  v-for="(p, run) in 5" :key="run" cols="12" class="py-0">
             <v-skeleton-loader
               type="image"
+              class="mb-10 mt-10"
+              transition="scale-transition"
               :loading="process.run">
             </v-skeleton-loader>
           </v-col>
         </v-row>
-        <v-row v-show="!process.run">
-          <v-col cols="12">
+        <v-row v-show="!process.run" v-if="list_users.length > 0">
+          <v-col cols="12" v-for="(item, index) in list_users" :key="index">
             <v-hover v-slot:default="{ hover }">
-              <div>
-                <v-card style="border-radius: 10px" class="box-shadow pa-3 mb-10 cursor-pointer"  v-for="(item, index) in list_users" :key="index">
-                  <v-expand-transition>
-                    <v-overlay 
-                      absolute 
-                      :opacity=".5" 
-                      :value="hover">
-                        <v-btn
-                          class="mr-3 red--text"
-                          color="white"
-                          small>
-                          <v-icon class="mr-1" small color="red">mdi-trash-can</v-icon>
-                            Hapus
-                          </v-btn>
-                          <v-btn
-                            color="white"
-                            class="green--text"
-                            small>
-                            <v-icon class="mr-1" small color="green">mdi-pencil</v-icon>
-                            Ubah
-                        </v-btn>
-                    </v-overlay>
-                  </v-expand-transition>
-                  <v-card-title class="title">{{item.name}}</v-card-title>
-                  <v-card-subtitle class="subtitle">{{ item.email }}</v-card-subtitle>
-                  <v-card-text>
-                    <div>
-                      Gender : {{ item.gender }}
-                    </div>
-                    <div>
-                      Status: {{ item.status }}
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </div>
-            </v-hover> 
+              <v-card class="box-shadow mb-10 pa-3 cursor-pointer border-radius">
+                <v-card-title class="title">{{item.name}}</v-card-title>
+                <v-card-subtitle class="subtitle">{{ item.email }}</v-card-subtitle>
+                <v-card-text>
+                  <div>
+                    Gender : {{ item.gender }}
+                  </div>
+                  <div>
+                    Status: {{ item.status }}
+                  </div>
+                </v-card-text>
+
+                <v-expand-transition>
+                  <div
+                    v-if="hover"
+                    class="d-flex transition-fast-in-fast-out black lighten-2 v-card--reveal display-3 white--text"
+                    style="height: 100%;">
+                    <v-btn
+                      class="mr-3 red--text"
+                      color="white"
+                      small
+                      @click="form.id = item.id; form.name = item.name; dialog.delete = true">
+                      <v-icon class="mr-1" small color="red">mdi-trash-can</v-icon>
+                        Hapus
+                      </v-btn>
+                      <v-btn
+                        color="white"
+                        class="green--text"
+                        small
+                        @click="reset(item)">
+                        <v-icon class="mr-1" small color="green">mdi-pencil</v-icon>
+                        Ubah
+                    </v-btn>
+                  </div>
+                </v-expand-transition>
+              </v-card>
+            </v-hover>
+          </v-col>
+        </v-row>
+        <v-row class="my-10 text-center" v-if="list_users.length < 1">
+          <v-col cols="12">
+            <div class="h1 font-weight-bold">
+              {{ this.contentEmpty }}
+            </div>
+          </v-col>
+        </v-row>
+        <v-row justify="center">
+          <v-col cols="3">
+            <v-btn
+              :disabled="page === 1"
+              class="white--text"
+              color="black"
+              @click="changePage('prev')">
+            <v-icon>mdi-chevron-left</v-icon>
+              Prev
+            </v-btn>
+          </v-col>
+          <v-col cols="3">
+            <v-btn
+              class="white--text"
+              color="black"
+              @click="changePage('next')">
+              Next
+              <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
           </v-col>
         </v-row>
       </v-container>   
@@ -218,119 +305,150 @@
 export default {
  data() {
     return {
+      contentEmpty:'',
       dialog: {
-        add: false
+        add: false,
+        delete: false
       },
       form: {
-        title: '',
+        id: '',
+        name: '',
         email: '',
         gender: '',
         status: ''
       },
       searching: '',
-      list_users: [
-          {
-              "id": 208958,
-              "name": "Ms. Devajyoti Johar",
-              "email": "johar_ms_devajyoti@goyette.net",
-              "gender": "female",
-              "status": "inactive"
-          },
-          {
-              "id": 208957,
-              "name": "Deven Acharya",
-              "email": "acharya_deven@bednar-hagenes.co",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208956,
-              "name": "Satish Kaniyar",
-              "email": "satish_kaniyar@weimann-nicolas.io",
-              "gender": "female",
-              "status": "active"
-          },
-          {
-              "id": 208955,
-              "name": "Kumuda Khan",
-              "email": "khan_kumuda@klocko.info",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208954,
-              "name": "Kashyapi Bhattathiri",
-              "email": "bhattathiri_kashyapi@dietrich.co",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208953,
-              "name": "Amaranaath Achari",
-              "email": "achari_amaranaath@farrell-ondricka.com",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208952,
-              "name": "Kanti Dutta Sr.",
-              "email": "sr_kanti_dutta@donnelly.co",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208951,
-              "name": "Aditeya Jain CPA",
-              "email": "cpa_aditeya_jain@hoppe.name",
-              "gender": "male",
-              "status": "active"
-          },
-          {
-              "id": 208950,
-              "name": "Ms. Samir Achari",
-              "email": "samir_ms_achari@runolfsson.info",
-              "gender": "male",
-              "status": "inactive"
-          },
-          {
-              "id": 208617,
-              "name": "Agrata Bharadwaj",
-              "email": "agrata_bharadwaj@beier.com",
-              "gender": "male",
-              "status": "inactive"
-          }
-      ],
-       option: {
-        modules: {
-          toolbar: [
-            ['bold', 'italic', 'underline'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-          ]
-        },
-      },
-      selected: {
-        banner: 0
-      },
+      list_users: [],
+      snackbar: false,
+      text: '',
+      timeout: 5000,
+      page: 1,
+      perPage: 5,
       process: {
-        run: false
+        run: false,
+        load: false
       },
     }
   },
   components: {},
-  watch: {},
-  computed: {},
+  watch: {
+    // 'searching': function(val) {
+    //   if (val.length >= 2) {
+    //     setTimeout(() => {
+    //       this.fetch();
+    //     }, 2000);
+    //   } else if (val.length < 1) {
+    //     this.fetch();
+    //   }
+    // }
+  },
+  computed: {
+  },
   mounted () {
-    console.log('isi route', this.$route);
+   this.fetch();
   },
   methods: {
-    toDetail(data) {
-      this.$router.push(`/blog/${data.id}`)
+    async fetch() {
+      const params = {
+        name: this.searching,
+        page: this.page,
+        per_page: this.perPage
+      }
+      this.process.run = true
+      await this.$axios.$get(`/users`, {params})
+      .then((response) => {
+        if(response) {
+          this.process.run = false
+          this.process.load = false
+          this.list_users = response
+          if (this.list_users.length < 1) {
+            this.contentEmpty = 'Data tidak ditemukan'
+          }
+        } else {
+          this.process.run = false
+          this.process.load = false
+        }
+      });
     },
-    fetch() {}
 
+    save() {
+      const cek = this.form.id === '';
+      if (cek) {
+        this.create();
+      } else {
+        this.update();
+      }
+    },
+
+    async create() {
+      this.process.load = true
+      await this.$axios.$post(`/users`, {
+        email: this.form.email,
+        name: this.form.name,
+        gender: this.form.gender,
+        status: this.form.status,
+      })
+      .then((response) => {
+        this.reset()
+        this.fetch()
+        this.text = 'Data berhasil ditambahkan'
+        this.snackbar = true
+      })
+    },
+
+    async update() {
+      this.process.load = true
+      await this.$axios.$put(`/users/${this.form.id}`, {
+        email: this.form.email,
+        name: this.form.name,
+        gender: this.form.gender,
+        status: this.form.status,
+      })
+      .then((response) => {
+        this.reset()
+        this.fetch()
+        this.text = 'Data berhasil diubah'
+        this.snackbar = true
+      })
+      .catch((error) => {
+
+      })
+    },
+
+    async deletes() {
+      this.process.load = true
+      await this.$axios.$delete(`/users/${this.form.id}`)
+      .then((response) => {
+        this.form = {
+          id: '',
+          name: ''
+        }
+        this.fetch()
+        this.dialog.delete = false;
+        this.text = 'Data berhasil dihapus'
+        this.snackbar = true
+      })
+    },
+    
+    reset(item) {
+      this.dialog.add = !this.dialog.add ? true : false
+      this.form = {
+        id: item !== undefined ? item.id : '',
+        name: item !== undefined ? item.name : '',
+        email: item !== undefined ? item.email : '',
+        gender: item !== undefined ? item.gender : '',
+        status: item !== undefined ? item.status : ''
+      }
+    },
+
+    changePage(val) {
+      if (val === 'prev') {
+        this.page = this.page - 1;
+      } else {
+        this.page = this.page + 1;
+      }
+      this.fetch();
+    }
   },
 }
 </script>

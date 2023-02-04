@@ -21,7 +21,6 @@ export default {
     }
   },
   mounted () {
-    console.log('isi route rawwer', this.$route);
   },
   methods: {
     name() {
