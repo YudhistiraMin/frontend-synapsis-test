@@ -34,7 +34,6 @@ export default {
   plugins: [
     '~plugins/VeeValidate.js',
     '~/plugins/Axios.js',
-    { src: '~plugins/VueQuillEditor.js', ssr: false },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components

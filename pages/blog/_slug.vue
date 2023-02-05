@@ -175,12 +175,14 @@ export default {
     },
 
     create() {
+      this.process.load = true
       this.$store.dispatch('addReview', {
         post: this.$route.params.slug,
         name: this.form.name,
         email: this.form.email,
         body: this.form.body,
       })
+      this.process.load = false
       this.reset();
     },
     
