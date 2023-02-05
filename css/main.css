@@ -3,7 +3,7 @@
 }
 @media only screen and (min-width: 1024px) {
   .v-app-bar, .v-dialog, .v-application, .v-footer, .v-buy, .v-filter, .v-add {
-    max-width: 550px !important;
+    max-width: 520px !important;
     margin: 0 auto;
   }
 }
@@ -15,4 +15,15 @@ html{
 /* BOX SHADOW */
 .box-shadow {
   box-shadow: 0px 5px 15px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* LINE */
+.line-text-first {
+  line-height: 1.5 !important;
+}
+.line-text-second {
+  line-height: 2 !important;
+}
+.line-text-third {
+  line-height: 1.75 !important;
 }

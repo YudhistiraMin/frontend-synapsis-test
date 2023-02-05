@@ -41,7 +41,7 @@
                 </ValidationProvider>
               </div>
               <div class="mb-4">
-                <ValidationProvider  name="email" rules="email" v-slot="{ errors }">
+                <ValidationProvider  name="email" rules="email|required" v-slot="{ errors }">
                 <div class="d-flex mb-3">
                   <span class="caption">Email</span>
                   <span class="required-sign">*</span>
@@ -183,17 +183,17 @@
     <!-- end dialog hapus -->
 
     <!-- list pengguna -->
-    <section class="mt-5 mb-7 px-5">
+    <section class="px-5" :class="$vuetify.breakpoint.name === 'xs' ? 'mb-15 mt-15' : 'mt-5 mb-7'">
       <v-container>
         <div class="d-flex justify-space-between align-center">
-          <div class="body-1 mb-2 color-head font-weight-bold">List pengguna</div>
+          <div class="body-1 mb-2 color-head font-weight-bold">User list</div>
           <v-btn
             text
             class="font-weight-bold"
             dense
             @click="dialog.add = true;">
             <v-icon>mdi-plus</v-icon>
-            Tambah pengguna
+            Add user
           </v-btn>
         </div>
         <v-row v-show="!process.run" class="mb-3 mt-0" justify="center" align="start">
@@ -251,7 +251,7 @@
                       small
                       @click="form.id = item.id; form.name = item.name; dialog.delete = true">
                       <v-icon class="mr-1" small color="red">mdi-trash-can</v-icon>
-                        Hapus
+                        Delete
                       </v-btn>
                       <v-btn
                         color="white"
@@ -259,7 +259,7 @@
                         small
                         @click="reset(item)">
                         <v-icon class="mr-1" small color="green">mdi-pencil</v-icon>
-                        Ubah
+                        Edit
                     </v-btn>
                   </div>
                 </v-expand-transition>
@@ -275,7 +275,7 @@
           </v-col>
         </v-row>
         <v-row justify="center">
-          <v-col cols="3">
+          <v-col cols="4">
             <v-btn
               :disabled="page === 1"
               class="white--text"
@@ -285,7 +285,7 @@
               Prev
             </v-btn>
           </v-col>
-          <v-col cols="3">
+          <v-col cols="4">
             <v-btn
               class="white--text"
               color="black"
@@ -371,12 +371,15 @@ export default {
       });
     },
 
-    save() {
+    async save() {
+      const isValid = await this.$refs.observer.validate()
       const cek = this.form.id === '';
-      if (cek) {
-        this.create();
-      } else {
-        this.update();
+      if (isValid) {
+        if (cek) {
+          this.create();
+        } else {
+          this.update();
+        }
       }
     },
 

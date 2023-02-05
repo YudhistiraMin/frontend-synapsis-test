@@ -3,7 +3,6 @@
     <v-navigation-drawer
       v-model="drawer"
       absolute
-      bottom
       dark
       temporary>
       <v-list
@@ -79,7 +78,7 @@
               <v-icon color="grey" left class="mr-1">mdi-chevron-left</v-icon>
             </v-btn>
             <span v-if="$vuetify.breakpoint.name !== 'xs'" class="text-cut body-1 grey--text text--darken-1"> 
-             Kembali
+             Back
             </span>
           </v-col>
         </v-row>
@@ -103,7 +102,6 @@
       
     },
     mounted () {
-      console.log('isi route', this.$route);
     },
     methods: {
       toUser() {

@@ -1,10 +1,10 @@
 <template>
   <div>
     <!-- list blog -->
-    <section class="mt-5 mb-7 px-5">
+    <section class="px-5" :class="$vuetify.breakpoint.name === 'xs' ? 'mb-15 mt-15' : 'mt-5 mb-7'">
       <v-container>
         <div class="d-flex justify-space-between align-center">
-          <div class="body-1 mb-2 color-head font-weight-bold">List blog</div>
+          <div class="body-1 mb-2 color-head font-weight-bold">Blog list</div>
         </div>
         <v-row justify="center" v-show="process.run">
           <v-col  v-for="(p, run) in 5" :key="run" cols="12" class="py-0">
@@ -35,6 +35,27 @@
             </v-card>
           </v-col>
         </v-row>
+        <v-row justify="center">
+          <v-col cols="4">
+            <v-btn
+              :disabled="page === 1"
+              class="white--text"
+              color="black"
+              @click="changePage('prev')">
+            <v-icon>mdi-chevron-left</v-icon>
+              Prev
+            </v-btn>
+          </v-col>
+          <v-col cols="4">
+            <v-btn
+              class="white--text"
+              color="black"
+              @click="changePage('next')">
+              Next
+              <v-icon>mdi-chevron-right</v-icon>
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-container>   
     </section>
     <!-- end list blog -->
@@ -50,7 +71,7 @@ export default {
         desc: '',
       },
       list_blog:[],
-       option: {
+      option: {
         modules: {
           toolbar: [
             ['bold', 'italic', 'underline'],
@@ -61,9 +82,8 @@ export default {
           ]
         },
       },
-      selected: {
-        banner: 0
-      },
+      page: 1,
+      perPage: 5,
       process: {
         run: false
       },
@@ -77,8 +97,12 @@ export default {
   },
   methods: {
     async fetch() {
+      const params = {
+        page: this.page,
+        per_page: this.perPage
+      }
       this.process.run = true
-      await this.$axios.$get(`/posts`)
+      await this.$axios.$get(`/posts`, {params})
       .then((response) =>{
         if (response) {
           this.process.run = false;
@@ -87,6 +111,15 @@ export default {
           this.process.run = false
         }
       })
+    },
+
+    changePage(val) {
+      if (val === 'prev') {
+        this.page = this.page - 1;
+      } else {
+        this.page = this.page + 1;
+      }
+      this.fetch();
     },
 
     toDetail(data) {
